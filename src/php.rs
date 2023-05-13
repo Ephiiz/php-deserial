@@ -1,21 +1,20 @@
-use std::{any::Any, error::Error, rc::Rc, fmt::Display};
+use std::{fmt::Display};
 
 
 use nom::{
-    branch::{alt, permutation},
-    bytes::complete::{is_a, tag, take, take_till, take_till1, take_while},
+    branch::{alt},
+    bytes::complete::{tag, take},
     character::{
         complete::{
-            alpha0, alphanumeric0, alphanumeric1, anychar, char, digit1, not_line_ending, one_of,
+            alphanumeric1, digit1,
         },
-        is_alphanumeric,
     },
-    combinator::{map, map_res, recognize, eof},
-    multi::{length_count, many0},
-    sequence::{delimited, pair, preceded, separated_pair, terminated, tuple},
+    combinator::{map, eof},
+    multi::{length_count},
+    sequence::{delimited, separated_pair, terminated, tuple},
     IResult,
 };
-use tracing::{debug, info};
+use tracing::{debug};
 
 type CerealError = crate::util::CerealError;
 
@@ -51,7 +50,7 @@ impl Display for Parsed<'_> {
             Parsed::Array(items) => write!(f, "[{}]", {
                 let mut out: Vec<String> = Vec::new();
                 // Only add a begining newline to arrays with items
-                if (items.len() != 0) {out.push("\n".to_owned())}
+                if !items.is_empty() {out.push("\n".to_owned())}
                 for item in items {
                     out.push(format!("{}, \n", item));
                 }
@@ -81,9 +80,9 @@ pub fn parse_string<'a>(input: &str) -> IResult<&str, Parsed<'_>> {
         |e| {
             debug!(
                 "Parsed string value '{}'",
-                e[1usize..e.len() - 1 as usize].to_vec().join("")
+                e[1usize..e.len() - 1_usize].to_vec().join("")
             );
-            Parsed::String(e[1usize..e.len() - 1 as usize].to_vec())
+            Parsed::String(e[1usize..e.len() - 1_usize].to_vec())
         },
     )(input)
 }
@@ -123,7 +122,7 @@ pub fn parse_null(input: &str) -> IResult<&str, Parsed<'_>> {
 }
 
 pub fn parse_eof(input: &str) -> IResult<&str, Parsed<'_>> {
-    map(eof, |e| {
+    map(eof, |_e| {
         debug!("reached end of input");
         Parsed::Eof
     })(input)
@@ -185,7 +184,7 @@ pub fn parse_object(input: &str) -> IResult<&str, Parsed<'_>> {
                 tag("}"),
             ),
         )),
-        |e| Parsed::Object(e),
+        Parsed::Object,
     )(input)
 }
 
@@ -280,7 +279,7 @@ mod test {
     #[test]
     fn set_of_lines() {
         let mut i: usize = 0;
-        for line in include_str!("input.txt").split("\n") {
+        for line in include_str!("input.txt").split('\n') {
             debug!("Parsing line {i}: {}", &line);
             parse_any(line).unwrap();
             i += 1;

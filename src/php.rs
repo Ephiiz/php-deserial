@@ -113,4 +113,10 @@ mod test {
         let t = parse_array(r#"a:1:{a:1:{i:5;}}"#);
         assert_eq!(t, Ok(("", Parsed::Array(vec![Parsed::Array(vec![Parsed::Integer("5")])]))));
     }
+
+    #[test]
+    fn parse_empty_array() {
+        let t = parse_array(r#"a:0:{}"#);
+        assert_eq!(t, Ok(("", Parsed::Array(vec![]))))
+    }
 }
